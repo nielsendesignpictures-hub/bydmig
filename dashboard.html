@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bydmig – Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --green:#565448; --green-dark:#3D3B32; --green-light:#E3E0D5;
+    --amber:#565448; --amber-light:#F7F3EA; --yellow:#565448;
+    --paper:#FFFAF4; --ink:#3D3B32; --grey:#6E6B5E; --line:#E4E0D5; --red:#565448;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+  header{background:#FFFFFF;color:var(--ink);border-bottom:1px solid var(--line);padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+  .logo{font-family:'Fraunces',serif;font-size:22px}
+  .logo span{color:#565448}
+  header .r{display:flex;gap:10px;align-items:center;font-size:13px}
+  header select{border:0;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:13px}
+  header button{border:0;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+
+  main{max-width:1100px;margin:0 auto;padding:26px 18px 60px}
+  h1{font-family:'Fraunces',serif;font-size:26px;margin-bottom:4px}
+  .sub{color:var(--grey);font-size:14px;margin-bottom:22px}
+  h2{font-size:16px;font-weight:700;margin:26px 0 12px}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .kpi .v{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--green)}
+  .kpi .v.amber{color:var(--amber)}
+  .kpi .l{font-size:12px;color:var(--grey);margin-top:4px;line-height:1.4}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--grey);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:9px 10px;border-bottom:1px solid #EFEAE0}
+  td.mono,th.num,td.num{font-family:'IBM Plex Mono',monospace}
+  th.num,td.num{text-align:right}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .badge.ok{background:var(--green-light);color:var(--green)}
+  .badge.wait{background:var(--amber-light);color:var(--amber)}
+  .badge.no{background:#F5E3E0;color:var(--red)}
+
+  .login{max-width:380px;margin:80px auto;text-align:center}
+  .login input{width:100%;border:2px solid var(--line);border-radius:10px;padding:13px;font-family:inherit;font-size:15px;margin:14px 0}
+  .login button{width:100%;border:0;background:var(--green);color:#fff;border-radius:12px;padding:14px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+  .warn{background:#FDF3E3;border:1px solid #EAD3B4;border-radius:12px;padding:14px;font-size:13px;line-height:1.55;margin:14px 0;text-align:left}
+
+  .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+  .calc label{font-size:12px;color:var(--grey);display:block;margin-bottom:4px}
+  .calc input{width:100%;border:2px solid var(--line);border-radius:8px;padding:9px;font-family:'IBM Plex Mono',monospace;font-size:14px}
+  .earn{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--green)}
+  .muted{color:var(--grey);font-size:12.5px;line-height:1.5}
+  .chartbox{height:260px}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login">
+  <div class="logo" style="color:var(--green);font-size:34px;font-family:'Fraunces',serif">Bydmig<span style="color:var(--yellow)">.</span></div>
+  <p class="sub" style="margin-top:6px">Admin-dashboard</p>
+  <div id="cfgWarn" class="warn" style="display:none"><b>Opsætning mangler:</b> Indsæt Supabase URL og anon-nøgle i CONFIG øverst i filen (samme værdier som i appen).</div>
+  <input type="email" id="adminEmail" placeholder="din@mail.dk">
+  <button onclick="login()">Send login-link</button>
+  <div id="adminWarn" class="warn" style="display:none">Du er logget ind, men ikke admin endnu. Kør insert-sætningen fra bydmig-admin-schema.sql med dit bruger-id: <code class="mono" id="uid"></code></div>
+</div>
+
+<div id="dashView" style="display:none">
+  <header>
+    <div class="logo">Bydmig<span>.</span> <span style="font-family:'Inter';font-size:13px;font-weight:400;opacity:.8">dashboard</span></div>
+    <div class="r">
+      <select id="range" onchange="loadAll()">
+        <option value="7">Sidste 7 dage</option>
+        <option value="30" selected>Sidste 30 dage</option>
+        <option value="90">Sidste 90 dage</option>
+        <option value="9999">Alt</option>
+      </select>
+      <button onclick="logout()">Log ud</button>
+    </div>
+  </header>
+  <main>
+    <h1>Overblik</h1>
+    <p class="sub" id="periodLabel"></p>
+
+    <div class="kpis" id="kpis"></div>
+
+    <h2>Bud pr. dag</h2>
+    <div class="card chartbox"><canvas id="chart"></canvas></div>
+
+    <h2>Pr. butik</h2>
+    <div class="card" style="overflow-x:auto">
+      <table id="storeTable">
+        <thead><tr><th>Butik</th><th class="num">Stande</th><th class="num">Varer</th><th class="num">Bud</th><th class="num">Accepteret</th><th class="num">Accept-rate</th><th class="num">Handelsværdi</th><th class="num">Gns. rabat</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h2>Din indtjening (beregner)</h2>
+    <div class="card">
+      <div class="calc">
+        <div><label>Licens kr./butik/md.</label><input type="number" id="cLic" value="2000" oninput="calcEarn()"></div>
+        <div><label>Antal betalende butikker</label><input type="number" id="cStores" value="0" oninput="calcEarn()"></div>
+        <div><label>Gebyr kr./handel</label><input type="number" id="cFee" value="3" oninput="calcEarn()"></div>
+        <div><label>Premium-lejere (29 kr./md.)</label><input type="number" id="cPrem" value="0" oninput="calcEarn()"></div>
+      </div>
+      <div class="earn" id="earnOut">0 kr/md.</div>
+      <p class="muted" id="earnDetail"></p>
+      <p class="muted" style="margin-top:8px">Handler i perioden hentes automatisk fra databasen. Licens og premium er manuelle felter, indtil fakturering er sat op.</p>
+    </div>
+
+    <h2>Seneste handler</h2>
+    <div class="card" style="overflow-x:auto">
+      <table id="dealsTable">
+        <thead><tr><th>Tidspunkt</th><th>Vare</th><th>Butik</th><th class="num">Pris</th><th class="num">Ny pris</th><th class="num">Rabat</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ====== CONFIG – samme værdier som i bydmig-app.html ====== */
+const CONFIG = {
+  SUPABASE_URL: "https://khnbilpfesvkrftuvobg.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_F4wLfdy50ucg_1PFf39EvQ_VSMKL9xJ"
+};
+const configured = !CONFIG.SUPABASE_URL.startsWith("INDSÆT");
+let sb = configured ? supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+if(!configured) document.getElementById('cfgWarn').style.display = 'block';
+
+const $ = id => document.getElementById(id);
+const kr = n => Math.round(Number(n)).toLocaleString('da-DK') + ' kr';
+let chart = null, dealCount = 0;
+
+async function login(){
+  if(!configured) return;
+  const email = $('adminEmail').value.trim();
+  if(!email) return;
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href.split('#')[0] } });
+  alert(error ? 'Fejl: '+error.message : 'Login-link sendt til '+email);
+}
+async function logout(){ await sb.auth.signOut(); location.reload(); }
+
+async function init(){
+  if(!configured) return;
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return;
+  // admin-tjek: kan vi læse admins-tabellen og står vi i den?
+  const { data } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+  if(!data){
+    $('adminWarn').style.display = 'block';
+    $('uid').textContent = session.user.id;
+    return;
+  }
+  $('loginView').style.display = 'none';
+  $('dashView').style.display = 'block';
+  loadAll();
+}
+
+async function loadAll(){
+  const days = Number($('range').value);
+  const since = new Date(Date.now() - days*86400000).toISOString();
+  $('periodLabel').textContent = days === 9999 ? 'Hele perioden' : 'Sidste '+days+' dage';
+
+  const [bidsQ, itemsQ, sellersQ, storesQ] = await Promise.all([
+    sb.from('bids').select('*, items(name, list_price, store_id)').gte('created_at', since).order('created_at',{ascending:false}),
+    sb.from('items').select('id, store_id, status'),
+    sb.from('sellers').select('id, store_id'),
+    sb.from('stores').select('id, name')
+  ]);
+  const bids = bidsQ.data||[], items = itemsQ.data||[], sellers = sellersQ.data||[], stores = storesQ.data||[];
+
+  const done = bids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status));
+  const buyers = new Set(bids.map(b=>b.buyer_id)).size;
+  const value = done.reduce((s,b)=>s+Number(b.status==='counter_accepted'?b.counter_amount:b.amount),0);
+  const listVal = done.reduce((s,b)=>s+Number(b.items?.list_price||0),0);
+  const discPct = listVal ? Math.round((1 - value/listVal)*100) : 0;
+  dealCount = done.length;
+
+  $('kpis').innerHTML = [
+    [bids.length, 'Bud i alt'],
+    [done.length, 'Gennemførte handler'],
+    [(bids.length?Math.round(done.length/bids.length*100):0)+' %', 'Accept-rate'],
+    [kr(value), 'Handelsværdi', 'amber'],
+    [discPct+' %', 'Gns. rabat'],
+    [buyers, 'Unikke købere'],
+    [sellers.length, 'Standlejere'],
+    [items.filter(i=>i.status==='active').length, 'Aktive varer']
+  ].map(k=>'<div class="kpi"><div class="v '+(k[2]||'')+'">'+k[0]+'</div><div class="l">'+k[1]+'</div></div>').join('');
+
+  // Chart: bud pr. dag
+  const byDay = {};
+  const dspan = Math.min(days===9999?60:days, 60);
+  for(let i=dspan-1;i>=0;i--){
+    const d = new Date(Date.now()-i*86400000);
+    byDay[d.toLocaleDateString('da-DK',{day:'2-digit',month:'2-digit'})] = 0;
+  }
+  bids.forEach(b=>{
+    const k = new Date(b.created_at).toLocaleDateString('da-DK',{day:'2-digit',month:'2-digit'});
+    if(k in byDay) byDay[k]++;
+  });
+  if(chart) chart.destroy();
+  chart = new Chart($('chart'), {
+    type:'bar',
+    data:{ labels:Object.keys(byDay), datasets:[{ data:Object.values(byDay), backgroundColor:'#565448', borderRadius:4 }]},
+    options:{ maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ y:{ beginAtZero:true, ticks:{precision:0} }, x:{ grid:{display:false} } } }
+  });
+
+  // Pr. butik
+  const rows = stores.map(st=>{
+    const sBids = bids.filter(b=>b.items?.store_id===st.id);
+    const sDone = sBids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status));
+    const sVal = sDone.reduce((s,b)=>s+Number(b.status==='counter_accepted'?b.counter_amount:b.amount),0);
+    const sList = sDone.reduce((s,b)=>s+Number(b.items?.list_price||0),0);
+    return '<tr><td><b>'+st.name+'</b></td>'+
+      '<td class="num">'+sellers.filter(s=>s.store_id===st.id).length+'</td>'+
+      '<td class="num">'+items.filter(i=>i.store_id===st.id&&i.status==='active').length+'</td>'+
+      '<td class="num">'+sBids.length+'</td>'+
+      '<td class="num">'+sDone.length+'</td>'+
+      '<td class="num">'+(sBids.length?Math.round(sDone.length/sBids.length*100):0)+' %</td>'+
+      '<td class="num">'+kr(sVal)+'</td>'+
+      '<td class="num">'+(sList?Math.round((1-sVal/sList)*100):0)+' %</td></tr>';
+  }).join('');
+  $('storeTable').querySelector('tbody').innerHTML = rows || '<tr><td colspan="8" class="muted">Ingen data endnu.</td></tr>';
+
+  // Seneste handler
+  const storeName = id => (stores.find(s=>s.id===id)||{}).name||'';
+  $('dealsTable').querySelector('tbody').innerHTML = bids.slice(0,25).map(b=>{
+    const fin = b.status==='counter_accepted'?b.counter_amount:b.amount;
+    const isDone = ['accepted','counter_accepted','completed'].includes(b.status);
+    const st = { pending:['wait','Afventer'], accepted:['ok','Accepteret'], counter_accepted:['ok','Accepteret'],
+      completed:['ok','Købt'], declined:['no','Afvist'], countered:['wait','Modbud'], expired:['no','Udløbet'] }[b.status]||['wait',b.status];
+    return '<tr><td class="mono">'+new Date(b.created_at).toLocaleString('da-DK',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>'+
+      '<td>'+(b.items?.name||'–')+'</td><td>'+storeName(b.items?.store_id)+'</td>'+
+      '<td class="num">'+kr(b.items?.list_price||0)+'</td>'+
+      '<td class="num">'+(isDone?kr(fin):'–')+'</td>'+
+      '<td class="num">'+(isDone&&b.items?Math.round((1-fin/b.items.list_price)*100)+' %':'–')+'</td>'+
+      '<td><span class="badge '+st[0]+'">'+st[1]+'</span></td></tr>';
+  }).join('') || '<tr><td colspan="7" class="muted">Ingen bud endnu.</td></tr>';
+
+  calcEarn();
+}
+
+function calcEarn(){
+  const lic = Number($('cLic').value)*Number($('cStores').value);
+  const fee = Number($('cFee').value)*dealCount;
+  const prem = Number($('cPrem').value)*29;
+  $('earnOut').textContent = kr(lic+fee+prem) + '/md.';
+  $('earnDetail').textContent = 'Licens '+kr(lic)+' + gebyrer '+kr(fee)+' ('+dealCount+' handler i perioden) + premium '+kr(prem);
+}
+
+init();
+</script>
+</body>
+</html>

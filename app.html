@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bydmig – Scan. Byd. Køb.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{
+    /* Godkendt jordnær palet – gamle variabelnavne remappet til nye værdier */
+    --green:#565448; --green-dark:#3D3B32; --green-light:#E3E0D5;
+    --amber:#565448; --amber-light:#F7F3EA; --yellow:#565448;
+    --paper:#FFFAF4; --kraft:#EFE9DC;
+    --ink:#3D3B32; --grey:#6E6B5E; --line:#E4E0D5;
+    --red:#565448; --radius:16px;
+    --surface:#FFFFFF; --sage:#565448; --sage-soft:#E3E0D5; --kraft-line:#D8D1BE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;min-height:100dvh}
+  h1,h2{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.3px}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+
+  header{background:var(--surface);color:var(--ink);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line)}
+  .logo{font-family:'Fraunces',serif;font-size:23px;font-weight:600;letter-spacing:-.5px}
+  .logo span{color:var(--clay,#565448)}
+  .role-toggle{display:flex;background:var(--paper);border-radius:999px;padding:3px;gap:2px;border:1px solid var(--line)}
+  .role-toggle button{border:0;background:transparent;color:var(--grey);font-family:inherit;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer}
+  .role-toggle button.active{background:var(--ink);color:var(--surface)}
+
+  main{flex:1;padding:22px 18px 40px}
+  .view{display:none;animation:fadeIn .25s ease}
+  .view.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  h1{font-family:'Fraunces',serif;font-size:26px;line-height:1.12;margin-bottom:8px}
+  h2{font-size:16px;font-weight:700;margin:18px 0 8px}
+  .sub{color:var(--grey);font-size:14px;line-height:1.5;margin-bottom:16px}
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  .btn{display:block;width:100%;border:0;border-radius:var(--radius);cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;padding:15px;text-align:center;transition:transform .08s}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-primary{background:var(--green);color:#fff}
+  .btn-amber{background:var(--amber);color:#fff}
+  .btn-ghost{background:transparent;color:var(--green);border:2px solid var(--line)}
+  .btn-red{background:transparent;color:var(--red);border:2px solid var(--red)}
+  .btn+.btn{margin-top:10px}
+  .btn-row{display:flex;gap:8px}
+  .btn-row .btn{padding:12px 6px;font-size:13.5px}
+
+  label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+  input,select{width:100%;border:2px solid var(--line);border-radius:10px;padding:12px;font-family:inherit;font-size:15px;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--green)}
+  input.mono{font-family:'IBM Plex Mono',monospace}
+  .row2{display:flex;gap:10px}
+  .row2>*{flex:1}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .card .cr{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .muted{color:var(--grey);font-size:13px}
+  .empty{text-align:center;color:var(--grey);font-size:14px;padding:30px 12px;line-height:1.5;border:2px dashed var(--line);border-radius:var(--radius)}
+
+  .badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:5px 12px;border-radius:999px}
+  .badge.ok{background:var(--green-light);color:var(--green)}
+  .badge.wait{background:var(--amber-light);color:var(--amber)}
+  .badge.no{background:#F5E3E0;color:var(--red)}
+
+  .tag-wrap{display:flex;justify-content:center;margin:8px 0 16px}
+  .tag{background:var(--kraft);border-radius:10px;padding:18px 28px 14px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.12);transform:rotate(-2deg);text-align:center;border:1px solid #D8CCAF}
+  .tag::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid #C9BC9C}
+  .tag .price{font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;margin-top:8px}
+  .tag .price.struck{font-size:20px;color:var(--grey);text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px}
+  .tag .price.new{color:var(--green)}
+  .tag .tag-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey);margin-top:4px}
+
+  #reader{border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+  .chips{display:flex;gap:8px;margin:8px 0 12px}
+  .chip{flex:1;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 0;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .chip.selected{border-color:var(--green);background:var(--green-light);color:var(--green)}
+
+  .kassekode{background:var(--green);color:#fff;border-radius:var(--radius);padding:16px;margin:14px 0}
+  .kassekode .kk-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;opacity:.75;margin-bottom:4px}
+  .kassekode .kk-code{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600;letter-spacing:1px}
+  .kassekode .kk-note{font-size:12px;opacity:.8;margin-top:6px;line-height:1.4}
+
+  .bundle{background:var(--amber-light);border:1px solid #EAD3B4;border-radius:var(--radius);padding:14px;margin:12px 0;font-size:14px;line-height:1.5}
+  .bundle b{color:var(--amber)}
+
+  .toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-90px);width:min(92vw,440px);background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:13.5px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.3);transition:transform .35s cubic-bezier(.2,1.2,.4,1);z-index:100}
+  .toast.show{transform:translate(-50%,0)}
+  .toast b{color:var(--yellow)}
+
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0}
+  .switch{position:relative;width:48px;height:28px;flex-shrink:0}
+  .switch input{opacity:0;width:0;height:0}
+  .switch i{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.2s;cursor:pointer}
+  .switch i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked+i{background:var(--green)}
+  .switch input:checked+i::after{transform:translateX(20px)}
+
+  .setup-warn{background:#FDF3E3;border:1px solid #EAD3B4;border-radius:var(--radius);padding:14px;font-size:13px;line-height:1.55;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">Bydmig<span>.</span></div>
+    <div class="role-toggle">
+      <button id="tabBuyer" class="active" onclick="App.setRole('buyer')">Køber</button>
+      <button id="tabSeller" onclick="App.setRole('seller')">Standlejer</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="setupWarn" class="setup-warn" style="display:none">
+      <b>Opsætning mangler:</b> Indsæt din Supabase URL og anon-nøgle i CONFIG øverst i denne fil (se byd-setup-guide.md). Indtil da kører appen ikke mod en database.
+    </div>
+
+    <!-- ================= KØBER ================= -->
+    <div class="view active" id="v-buyer-home">
+      <h1>Synes du, prisen er for høj?</h1>
+      <p class="sub">Scan varens prismærke eller tast varenummeret – og giv dit bud.</p>
+      <button class="btn btn-primary" onclick="Buyer.startScan()">Scan stregkode</button>
+      <label>Eller tast varenummer</label>
+      <div class="row2">
+        <input class="mono" id="itemNoInput" inputmode="numeric" placeholder="fx 4512">
+        <button class="btn btn-ghost" style="width:auto;flex:0 0 90px" onclick="Buyer.lookup()">Find</button>
+      </div>
+      <h2>Dine bud</h2>
+      <div id="myBids"><div class="empty">Ingen bud endnu. Scan en vare for at komme i gang.</div></div>
+      <div id="bundleBox"></div>
+    </div>
+
+    <div class="view" id="v-scan">
+      <div id="reader"></div>
+      <button class="btn btn-ghost" onclick="Buyer.stopScan()">Annullér</button>
+    </div>
+
+    <div class="view" id="v-item">
+      <div class="tag-wrap"><div class="tag">
+        <div class="price mono" id="iPrice"></div>
+        <div class="tag-label" id="iTagLabel"></div>
+      </div></div>
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:17px" id="iName"></div>
+        <div class="muted mono" id="iStand"></div>
+      </div>
+      <div id="iBundleBanner"></div>
+      <h2 style="margin-top:0">Dit bud</h2>
+      <div class="chips" id="chipRow"></div>
+      <div class="row2" style="align-items:center">
+        <input class="mono" type="number" id="bidAmount" inputmode="numeric">
+        <span class="mono muted" style="flex:0 0 auto">kr</span>
+      </div>
+      <p class="muted" style="margin-top:8px">Minimumsbud: <b id="minBid"></b> (50 % af prisen)</p>
+      <button class="btn btn-amber" style="margin-top:14px" onclick="Buyer.sendBid()">Send bud</button>
+      <button class="btn btn-ghost" onclick="App.show('v-buyer-home')">Tilbage</button>
+    </div>
+
+    <!-- ================= STANDLEJER ================= -->
+    <div class="view" id="v-seller-login">
+      <h1>Standlejer-login</h1>
+      <p class="sub">Indtast din mail – du får et login-link tilsendt. Ingen adgangskode.</p>
+      <label>E-mail</label>
+      <input type="email" id="sellerEmail" placeholder="dig@mail.dk">
+      <button class="btn btn-primary" style="margin-top:14px" onclick="Seller.sendMagicLink()">Send login-link</button>
+    </div>
+
+    <div class="view" id="v-seller-setup">
+      <h1>Opret din reol</h1>
+      <label>Butik</label>
+      <select id="setupStore"></select>
+      <div class="row2">
+        <div><label>Reolnummer</label><input class="mono" id="setupRack" placeholder="42"></div>
+        <div><label>Visningsnavn</label><input id="setupName" placeholder="Reol 42"></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="Seller.createProfile()">Opret</button>
+    </div>
+
+    <div class="view" id="v-seller-home">
+      <h1 id="sTitle">Din reol</h1>
+      <p class="sub" id="sSub"></p>
+
+      <div class="card">
+        <div class="switch-row">
+          <div><b>Auto-accept</b><div class="muted">Acceptér automatisk bud over din grænse</div></div>
+          <label class="switch"><input type="checkbox" id="autoAccept" onchange="Seller.saveSettings()"><i></i></label>
+        </div>
+        <div class="switch-row">
+          <div class="muted" style="flex:1">Grænse: <b class="mono" id="pctVal">75 %</b> af prisen</div>
+          <input type="range" min="50" max="95" step="5" id="pctSlider" style="flex:1"
+                 oninput="document.getElementById('pctVal').textContent=this.value+' %'"
+                 onchange="Seller.saveSettings()">
+        </div>
+      </div>
+
+      <div class="card">
+        <b>Bundle-rabat</b>
+        <div class="muted" style="margin-bottom:6px">Giv rabat, når nogen køber flere af dine varer</div>
+        <div class="row2">
+          <div><label>Min. antal varer</label><input class="mono" type="number" id="bMin" min="2" placeholder="3" onchange="Seller.saveSettings()"></div>
+          <div><label>Rabat %</label><input class="mono" type="number" id="bPct" min="5" max="50" placeholder="10" onchange="Seller.saveSettings()"></div>
+        </div>
+      </div>
+
+      <h2>Indkomne bud</h2>
+      <div id="sellerBids"><div class="empty">Ingen bud lige nu.</div></div>
+
+      <h2>Dine varer</h2>
+      <div class="card">
+        <label>Varenummer</label>
+        <input class="mono" id="nItemNo" placeholder="4512">
+        <label>Navn</label>
+        <input id="nItemName" placeholder="Barbour-jakke, str. M">
+        <div class="row2">
+          <div><label>Pris (kr)</label><input class="mono" type="number" id="nItemPrice" placeholder="85"></div>
+          <div><label>Min. pris (valgfri)</label><input class="mono" type="number" id="nItemMin" placeholder=""></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:14px" onclick="Seller.addItem()">Tilføj vare</button>
+      </div>
+      <div id="itemList"></div>
+      <button class="btn btn-ghost" style="margin-top:8px" onclick="Seller.logout()">Log ud</button>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG – indsæt dine egne værdier fra Supabase
+   (Project Settings → API)
+   ============================================================ */
+const CONFIG = {
+  SUPABASE_URL: "https://khnbilpfesvkrftuvobg.supabase.co",       // fx https://abcd1234.supabase.co
+  SUPABASE_ANON_KEY: "sb_publishable_F4wLfdy50ucg_1PFf39EvQ_VSMKL9xJ",
+  PRICE_VALID_MINUTES: 30,
+  MIN_BID_PCT: 50
+};
+
+const configured = !CONFIG.SUPABASE_URL.startsWith("INDSÆT");
+let sb = null;
+if (configured) sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+else document.getElementById('setupWarn').style.display = 'block';
+
+const $ = id => document.getElementById(id);
+const kr = n => Number(n).toLocaleString('da-DK') + ' kr';
+let toastTimer;
+function toast(html){
+  const t = $('toast'); t.innerHTML = html; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+/* ================= APP / NAVIGATION ================= */
+const App = {
+  role: 'buyer',
+  show(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    $(id).classList.add('active');
+  },
+  async setRole(role){
+    App.role = role;
+    $('tabBuyer').classList.toggle('active', role==='buyer');
+    $('tabSeller').classList.toggle('active', role==='seller');
+    if(role==='buyer'){ App.show('v-buyer-home'); Buyer.refresh(); }
+    else { Seller.enter(); }
+  }
+};
+
+/* ================= KØBER ================= */
+const Buyer = {
+  scanner: null,
+  currentItem: null,
+  channel: null,
+
+  async ensureAuth(){
+    if(!configured) return null;
+    let { data:{ session } } = await sb.auth.getSession();
+    if(!session){
+      const { data, error } = await sb.auth.signInAnonymously();
+      if(error){ toast('Login-fejl: '+error.message); return null; }
+      session = data.session;
+    }
+    return session.user;
+  },
+
+  async startScan(){
+    App.show('v-scan');
+    Buyer.scanner = new Html5Qrcode("reader");
+    try{
+      await Buyer.scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 140 } },
+        code => { Buyer.stopScan(); $('itemNoInput').value = code; Buyer.lookup(); }
+      );
+    }catch(e){
+      toast('Kunne ikke starte kameraet – tast varenummeret i stedet.');
+      App.show('v-buyer-home');
+    }
+  },
+  async stopScan(){
+    if(Buyer.scanner){ try{ await Buyer.scanner.stop(); }catch(e){} Buyer.scanner = null; }
+    App.show('v-buyer-home');
+  },
+
+  async lookup(){
+    if(!configured){ toast('Appen er ikke koblet til databasen endnu.'); return; }
+    const no = $('itemNoInput').value.trim();
+    if(!no){ toast('Tast et varenummer.'); return; }
+    const { data, error } = await sb.from('items')
+      .select('*, sellers(display_name, rack_no, bundle_min_items, bundle_discount_pct), stores(name)')
+      .eq('item_no', no).eq('status','active').limit(1).maybeSingle();
+    if(error){ toast('Fejl: '+error.message); return; }
+    if(!data){ toast('Ingen aktiv vare med nummer <b>'+no+'</b>.'); return; }
+    Buyer.showItem(data);
+  },
+
+  showItem(item){
+    Buyer.currentItem = item;
+    const p = Number(item.list_price);
+    $('iPrice').textContent = kr(p);
+    $('iTagLabel').textContent = 'Vare '+item.item_no+' · Reol '+item.sellers.rack_no;
+    $('iName').textContent = item.name;
+    $('iStand').textContent = item.stores.name+' · '+item.sellers.display_name;
+    const minBid = Math.ceil(p * CONFIG.MIN_BID_PCT/100);
+    $('minBid').textContent = kr(minBid);
+    const suggestions = [Math.round(p*0.6/5)*5, Math.round(p*0.7/5)*5, Math.round(p*0.8/5)*5]
+      .filter((v,i,a)=>v>=minBid && a.indexOf(v)===i);
+    $('chipRow').innerHTML = suggestions.map((v,i)=>
+      '<button class="chip'+(i===1?' selected':'')+'" onclick="Buyer.pick(this,'+v+')">'+v+' kr</button>').join('');
+    $('bidAmount').value = suggestions[1] ?? suggestions[0] ?? minBid;
+    // Bundle-besked allerede ved budtrin: fortæl om ejerens faste rabat
+    const s = item.sellers;
+    if(s.bundle_min_items && s.bundle_discount_pct){
+      $('iBundleBanner').innerHTML =
+        '<div class="bundle" style="margin-top:0">🎁 <b>'+s.display_name+' har bundle-rabat:</b> '+
+        s.bundle_min_items+' ting eller flere = '+s.bundle_discount_pct+' % på det hele – automatisk, sat af ejeren. '+
+        'Nogle gange en bedre handel end at byde på én ting.</div>';
+    } else {
+      $('iBundleBanner').innerHTML = '';
+    }
+    App.show('v-item');
+  },
+  pick(el,val){
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected'); $('bidAmount').value = val;
+  },
+
+  async sendBid(){
+    const user = await Buyer.ensureAuth(); if(!user) return;
+    const item = Buyer.currentItem;
+    const amount = Number($('bidAmount').value);
+    const p = Number(item.list_price);
+    if(!amount || amount < p*CONFIG.MIN_BID_PCT/100){ toast('Buddet er under minimumsbud.'); return; }
+    if(amount >= p){ toast('Dit bud er over prisen – bare køb varen 😊'); return; }
+    const { data, error } = await sb.from('bids')
+      .insert({ item_id: item.id, buyer_id: user.id, amount })
+      .select().single();
+    if(error){ toast('Fejl: '+error.message); return; }
+    if(data.status === 'accepted') toast('<b>Auto-accept!</b> Prisen er din.');
+    else toast('Bud sendt – standlejeren har fået besked.');
+    App.show('v-buyer-home');
+    Buyer.refresh();
+  },
+
+  async refresh(){
+    if(!configured) return;
+    const user = await Buyer.ensureAuth(); if(!user) return;
+    Buyer.subscribe(user);
+    const { data, error } = await sb.from('bids')
+      .select('*, items(name, item_no, list_price, seller_id, sellers(display_name, rack_no, bundle_min_items, bundle_discount_pct))')
+      .eq('buyer_id', user.id).order('created_at',{ascending:false}).limit(30);
+    if(error || !data?.length){
+      $('myBids').innerHTML = '<div class="empty">Ingen bud endnu. Scan en vare for at komme i gang.</div>';
+      $('bundleBox').innerHTML = ''; return;
+    }
+    $('myBids').innerHTML = data.map(b=>{
+      const st = {
+        pending:['wait','Afventer svar'], accepted:['ok','Accepteret'],
+        counter_accepted:['ok','Accepteret'], declined:['no','Afvist'],
+        countered:['wait','Modbud: '+kr(b.counter_amount)],
+        expired:['no','Udløbet'], completed:['ok','Købt']
+      }[b.status] || ['wait',b.status];
+      const inBundle = !!b.bundle_id && b.bundle_price != null;
+      const finalPrice = inBundle ? b.bundle_price : (b.status==='counter_accepted' ? b.counter_amount : b.amount);
+      let extra = '';
+      if(b.status==='accepted' || b.status==='counter_accepted'){
+        const bundleTag = inBundle
+          ? '<div class="kk-note" style="opacity:1;color:var(--yellow)">🎁 Bundle-pris (−'+b.items.sellers.bundle_discount_pct+' %)</div>' : '';
+        extra = '<div class="kassekode"><div class="kk-label">Vis ved kassen</div>'+
+          '<div class="kk-code">Bydmig-'+b.items.item_no+'-'+Math.round(finalPrice)+'</div>'+
+          bundleTag+
+          '<div class="kk-note">Ny pris gyldig til '+new Date(b.expires_at).toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})+'</div></div>';
+      }
+      if(b.status==='countered'){
+        extra = '<div class="btn-row" style="margin-top:10px">'+
+          '<button class="btn btn-primary" onclick="Buyer.acceptCounter(\''+b.id+'\','+b.counter_amount+')">Acceptér '+kr(b.counter_amount)+'</button>'+
+          '<button class="btn btn-red" onclick="Buyer.declineCounter(\''+b.id+'\')">Nej tak</button></div>';
+      }
+      return '<div class="card"><div class="cr"><b>'+b.items.name+'</b>'+
+        '<span class="badge '+st[0]+'">'+st[1]+'</span></div>'+
+        '<div class="muted">Pris '+kr(b.items.list_price)+' · Dit bud <b class="mono">'+kr(b.amount)+'</b> · '+b.items.sellers.display_name+'</div>'+
+        extra+'</div>';
+    }).join('');
+    Buyer.renderBundle(data);
+  },
+
+  renderBundle(bids){
+    // Gruppér accepterede bud pr. sælger. Kun bud der IKKE allerede
+    // er i en bundle tæller med til at danne en ny.
+    const bySeller = {};
+    bids.filter(b=>['accepted','counter_accepted'].includes(b.status) && !b.bundle_id).forEach(b=>{
+      const sid = b.items.seller_id;
+      (bySeller[sid] = bySeller[sid] || {seller:b.items.sellers, sellerId:sid, bids:[]}).bids.push(b);
+    });
+    let html = '';
+    Object.values(bySeller).forEach(g=>{
+      const s = g.seller;
+      if(!s.bundle_min_items || !s.bundle_discount_pct) return;
+      const n = g.bids.length;
+      const total = g.bids.reduce((sum,b)=>sum+Number(b.status==='counter_accepted'?b.counter_amount:b.amount),0);
+      if(n >= s.bundle_min_items){
+        const disc = Math.round(total * s.bundle_discount_pct/100);
+        html += '<div class="bundle">🎁 <b>Bundle klar hos '+s.display_name+':</b> '+n+' varer = '+
+          s.bundle_discount_pct+' % rabat. Du sparer <b>'+kr(disc)+'</b> (ny total '+kr(total-disc)+').'+
+          '<button class="btn btn-amber" style="margin-top:10px" onclick="Buyer.activateBundle(\''+g.sellerId+'\')">Aktivér bundle-rabat</button></div>';
+      } else {
+        const missing = s.bundle_min_items - n;
+        html += '<div class="bundle">Køb <b>'+missing+' vare'+(missing>1?'r':'')+' mere</b> fra '+
+          s.display_name+' og få <b>'+s.bundle_discount_pct+' % rabat</b> på det hele.</div>';
+      }
+    });
+    $('bundleBox').innerHTML = html;
+  },
+
+  async activateBundle(sellerId){
+    // Kalder databasefunktionen der fordeler rabatten ud på hver vares
+    // pris og giver hver vare sin egen nye kassekode/pris.
+    const { error } = await sb.rpc('create_bundle', { p_seller_id: sellerId });
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast('<b>Bundle aktiveret!</b> Hver vare har fået sin nye pris.');
+    Buyer.refresh();
+  },
+
+  async acceptCounter(bidId, amount){
+    const { error } = await sb.from('bids').update({
+      status:'counter_accepted',
+      expires_at: new Date(Date.now()+CONFIG.PRICE_VALID_MINUTES*60000).toISOString()
+    }).eq('id', bidId);
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast('Modbud accepteret – prisen er din.'); Buyer.refresh();
+  },
+  async declineCounter(bidId){
+    await sb.from('bids').update({ status:'declined' }).eq('id', bidId);
+    Buyer.refresh();
+  },
+
+  subscribe(user){
+    if(Buyer.channel || !configured) return;
+    Buyer.channel = sb.channel('buyer-bids')
+      .on('postgres_changes',
+        { event:'UPDATE', schema:'public', table:'bids', filter:'buyer_id=eq.'+user.id },
+        payload => {
+          const s = payload.new.status;
+          if(s==='accepted') toast('<b>Dit bud blev accepteret!</b> Se din kassekode.');
+          if(s==='countered') toast('Standlejeren har sendt et <b>modbud</b>.');
+          if(s==='declined') toast('Dit bud blev afvist.');
+          Buyer.refresh();
+        })
+      .subscribe();
+  }
+};
+
+/* ================= STANDLEJER ================= */
+const Seller = {
+  profile: null,
+  channel: null,
+
+  async enter(){
+    if(!configured){ App.show('v-seller-login'); return; }
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session || session.user.is_anonymous){ App.show('v-seller-login'); return; }
+    const { data } = await sb.from('sellers').select('*, stores(name)')
+      .eq('user_id', session.user.id).maybeSingle();
+    if(!data){ await Seller.loadStores(); App.show('v-seller-setup'); return; }
+    Seller.profile = data;
+    Seller.renderHome();
+  },
+
+  async sendMagicLink(){
+    if(!configured){ toast('Appen er ikke koblet til databasen endnu.'); return; }
+    const email = $('sellerEmail').value.trim();
+    if(!email){ toast('Indtast din e-mail.'); return; }
+    const { error } = await sb.auth.signInWithOtp({
+      email, options:{ emailRedirectTo: location.href.split('#')[0] }
+    });
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast('Login-link sendt til <b>'+email+'</b> – tjek din indbakke.');
+  },
+
+  async loadStores(){
+    const { data } = await sb.from('stores').select('*').order('name');
+    $('setupStore').innerHTML = (data||[]).map(s=>'<option value="'+s.id+'">'+s.name+'</option>').join('');
+  },
+
+  async createProfile(){
+    const { data:{ session } } = await sb.auth.getSession();
+    const rack = $('setupRack').value.trim();
+    const name = $('setupName').value.trim() || ('Reol '+rack);
+    if(!rack){ toast('Angiv dit reolnummer.'); return; }
+    const { data, error } = await sb.from('sellers').insert({
+      user_id: session.user.id, store_id: $('setupStore').value,
+      rack_no: rack, display_name: name
+    }).select('*, stores(name)').single();
+    if(error){ toast('Fejl: '+error.message); return; }
+    Seller.profile = data; Seller.renderHome();
+  },
+
+  async renderHome(){
+    const p = Seller.profile;
+    $('sTitle').textContent = p.display_name;
+    $('sSub').textContent = p.stores.name+' · Reol '+p.rack_no;
+    $('autoAccept').checked = p.auto_accept;
+    $('pctSlider').value = p.min_price_pct;
+    $('pctVal').textContent = p.min_price_pct+' %';
+    $('bMin').value = p.bundle_min_items || '';
+    $('bPct').value = p.bundle_discount_pct || '';
+    App.show('v-seller-home');
+    Seller.loadItems(); Seller.loadBids(); Seller.subscribe();
+  },
+
+  async saveSettings(){
+    const upd = {
+      auto_accept: $('autoAccept').checked,
+      min_price_pct: Number($('pctSlider').value),
+      bundle_min_items: Number($('bMin').value) || null,
+      bundle_discount_pct: Number($('bPct').value) || null
+    };
+    const { error } = await sb.from('sellers').update(upd).eq('id', Seller.profile.id);
+    if(error){ toast('Fejl: '+error.message); return; }
+    Object.assign(Seller.profile, upd);
+    toast('Indstillinger gemt.');
+  },
+
+  async addItem(){
+    const item = {
+      seller_id: Seller.profile.id, store_id: Seller.profile.store_id,
+      item_no: $('nItemNo').value.trim(), name: $('nItemName').value.trim(),
+      list_price: Number($('nItemPrice').value),
+      min_price: Number($('nItemMin').value) || null
+    };
+    if(!item.item_no || !item.name || !item.list_price){ toast('Udfyld varenummer, navn og pris.'); return; }
+    const { error } = await sb.from('items').insert(item);
+    if(error){ toast(error.code==='23505' ? 'Varenummeret findes allerede i butikken.' : 'Fejl: '+error.message); return; }
+    $('nItemNo').value=''; $('nItemName').value=''; $('nItemPrice').value=''; $('nItemMin').value='';
+    toast('Vare tilføjet.'); Seller.loadItems();
+  },
+
+  async loadItems(){
+    const { data } = await sb.from('items').select('*')
+      .eq('seller_id', Seller.profile.id).eq('status','active').order('created_at',{ascending:false});
+    $('itemList').innerHTML = (data||[]).map(i=>
+      '<div class="card"><div class="cr"><b>'+i.name+'</b><span class="mono">'+kr(i.list_price)+'</span></div>'+
+      '<div class="muted mono">Vare '+i.item_no+(i.min_price?' · Min: '+kr(i.min_price):'')+'</div></div>'
+    ).join('') || '<div class="empty">Ingen varer endnu.</div>';
+  },
+
+  async loadBids(){
+    const { data } = await sb.from('bids')
+      .select('*, items!inner(name, item_no, list_price, seller_id)')
+      .eq('items.seller_id', Seller.profile.id)
+      .eq('status','pending').order('created_at',{ascending:false});
+    if(!data?.length){ $('sellerBids').innerHTML = '<div class="empty">Ingen bud lige nu.</div>'; return; }
+    $('sellerBids').innerHTML = data.map(b=>{
+      const counter = Math.round((Number(b.amount)+Number(b.items.list_price))/2/5)*5;
+      return '<div class="card"><div class="cr"><b>'+b.items.name+'</b><span class="muted mono">'+kr(b.items.list_price)+'</span></div>'+
+        '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:24px;font-weight:600;color:var(--amber);margin:6px 0">'+kr(b.amount)+'</div>'+
+        '<div class="btn-row">'+
+        '<button class="btn btn-primary" onclick="Seller.respond(\''+b.id+'\',\'accepted\')">Acceptér</button>'+
+        '<button class="btn btn-amber" onclick="Seller.respond(\''+b.id+'\',\'countered\','+counter+')">Modbud '+counter+'</button>'+
+        '<button class="btn btn-red" onclick="Seller.respond(\''+b.id+'\',\'declined\')">Afvis</button>'+
+        '</div></div>';
+    }).join('');
+  },
+
+  async respond(bidId, status, counter){
+    const upd = { status };
+    if(status==='accepted') upd.expires_at = new Date(Date.now()+CONFIG.PRICE_VALID_MINUTES*60000).toISOString();
+    if(status==='countered') upd.counter_amount = counter;
+    const { error } = await sb.from('bids').update(upd).eq('id', bidId);
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast(status==='accepted'?'Bud accepteret – prisen er logget.':status==='countered'?'Modbud sendt.':'Bud afvist.');
+    Seller.loadBids();
+  },
+
+  subscribe(){
+    if(Seller.channel || !configured) return;
+    Seller.channel = sb.channel('seller-bids')
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'bids' },
+        () => { toast('<b>Nyt bud!</b>'); Seller.loadBids(); })
+      .subscribe();
+  },
+
+  async logout(){
+    await sb.auth.signOut();
+    Seller.profile = null;
+    App.show('v-seller-login');
+  }
+};
+
+/* init */
+if(configured) Buyer.refresh();
+</script>
+</body>
+</html>

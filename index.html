@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bydmig – Prut om prisen på reolmarkedet</title>
+<meta name="description" content="Scan varens prismærke, giv dit bud, og betal den nye pris ved kassen. Bydmig bringer prutteriet tilbage til reolmarkedet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFAF4;
+    --surface:#FFFFFF;
+    --surface-2:#F7F3EA;
+--clay:#565448;
+    --clay-soft:#E3E0D5;
+    --clay-dark:#3D3B32;
+--sage:#565448;
+    --sage-soft:#E3E0D5;
+--ink:#3D3B32;
+    --ink-soft:#6E6B5E;
+    --line:#E4E0D5;
+--kraft:#EFE9DC;
+    --kraft-line:#D8D1BE;
+    --ok:#565448;
+    --radius:18px; --radius-sm:12px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.5px}
+
+  nav{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+  nav .wrap{display:flex;justify-content:space-between;align-items:center;padding:16px 22px}
+  .logo{font-family:'Fraunces',serif;font-size:25px;font-weight:600;color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+  .logo b{color:var(--clay)}
+  nav .links{display:flex;gap:24px;font-size:14.5px;font-weight:500;align-items:center}
+  nav a{color:var(--ink-soft);text-decoration:none}
+  nav a:hover{color:var(--ink)}
+  @media(max-width:640px){nav .links a:not(.cta){display:none}}
+  .cta{background:var(--clay);color:#fff!important;padding:9px 20px;border-radius:999px;font-weight:600}
+
+  .hero{padding:76px 0 88px;text-align:center}
+  .hero .tag{display:inline-block;background:var(--kraft);border:1px solid var(--kraft-line);border-radius:14px;padding:16px 30px 13px;transform:rotate(-2.5deg);margin-bottom:30px;position:relative;box-shadow:0 12px 28px rgba(44,42,39,.12)}
+  .hero .tag::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--kraft-line)}
+  .hero .tag .old{font-family:'IBM Plex Mono',monospace;font-size:19px;color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--clay);text-decoration-thickness:2px;margin-top:6px;display:inline-block}
+  .hero .tag .new{font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;color:var(--clay-dark)}
+  .hero h1{font-size:clamp(34px,6vw,56px);line-height:1.08;max-width:15ch;margin:0 auto 20px}
+  .hero p{font-size:clamp(16px,2.2vw,19px);color:var(--ink-soft);max-width:50ch;margin:0 auto 32px}
+  .hero .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;padding:15px 30px;border-radius:var(--radius-sm);font-weight:600;font-size:15.5px;text-decoration:none;transition:.2s}
+  .btn-primary{background:var(--clay);color:#fff}
+  .btn-primary:hover{background:var(--clay-dark)}
+  .btn-ghost{border:1.5px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{background:var(--surface)}
+
+  section{padding:66px 0}
+  h2.sec{font-size:clamp(25px,3.6vw,34px);margin-bottom:30px;text-align:center}
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+  .step .n{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--clay);background:var(--clay-soft);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .step h3{font-size:18px;margin-bottom:8px}
+  .step p{font-size:14.5px;color:var(--ink-soft)}
+
+  .split{background:var(--surface-2)}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+  .col{background:var(--surface);border-radius:var(--radius);padding:30px;border:1px solid var(--line)}
+  .col h3{font-size:20px;color:var(--clay-dark);margin-bottom:14px}
+  .col ul{list-style:none}
+  .col li{padding:8px 0 8px 28px;position:relative;font-size:15px}
+  .col li::before{content:"";position:absolute;left:2px;top:15px;width:11px;height:11px;border-radius:50%;background:var(--sage-soft);border:2px solid var(--sage)}
+
+  .faq-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden}
+  .faq-item summary{padding:18px 22px;font-weight:600;font-size:15.5px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary::after{content:"+";font-family:'Fraunces',serif;color:var(--clay);font-size:22px;flex-shrink:0}
+  .faq-item[open] summary::after{content:"–"}
+  .faq-item .a{padding:0 22px 18px;font-size:14.5px;color:var(--ink-soft)}
+  .faq-item .a b{color:var(--ink)}
+  .faq-item .a a{color:var(--clay-dark)}
+
+  footer{background:var(--ink);color:rgba(246,244,239,.75);padding:44px 0;font-size:13.5px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-start}
+  footer .logo{color:var(--surface)}
+  footer a{color:var(--clay-soft);text-decoration:none}
+  footer .flinks{display:flex;flex-direction:column;gap:7px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="logo" href="#">Bydmig<b>.</b></a>
+  <div class="links">
+    <a href="#saadan">Sådan virker det</a>
+    <a href="#standlejer">For standlejere</a>
+    <a href="#faq">FAQ</a>
+    <a class="cta" href="/app">Åbn appen</a>
+  </div>
+</div></nav>
+
+<div class="hero"><div class="wrap">
+  <div class="tag"><span class="old">79 kr</span><br><span class="new">60 kr</span></div>
+  <h1>Synes du, prisen er lidt for høj?</h1>
+  <p>Bydmig bringer prutteriet tilbage til reolmarkedet. Scan varens prismærke, giv dit bud – og accepteres det, betaler du den nye pris ved kassen. Ingen app-download, ingen oprettelse.</p>
+  <div class="btns">
+    <a class="btn btn-primary" href="/app">Scan og byd nu</a>
+    <a class="btn btn-ghost" href="#standlejer">Jeg har en reol</a>
+  </div>
+</div></div>
+
+<section id="saadan"><div class="wrap">
+  <h2 class="sec">Sådan virker det</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Scan</h3><p>Scan stregkoden på varens prismærke med din telefon – direkte i browseren.</p></div>
+    <div class="step"><div class="n">2</div><h3>Byd</h3><p>Giv dit bud. Standlejeren svarer med det samme – ofte helt automatisk.</p></div>
+    <div class="step"><div class="n">3</div><h3>Køb</h3><p>Accepteres buddet, er den nye pris gyldig i 30 minutter. Betal ved kassen som normalt.</p></div>
+  </div>
+</div></section>
+
+<section class="split" id="standlejer"><div class="wrap">
+  <h2 class="sec">Alle vinder</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Har du en reol?</h3>
+      <ul>
+        <li>Sælg flere varer – også dem, der var sat lidt for højt</li>
+        <li>Færre varer retur, når lejeperioden slutter</li>
+        <li>Auto-accept: sæt din grænse én gang, resten kører selv</li>
+        <li>Bundle-rabat: beløn kunder, der køber flere af dine ting</li>
+        <li>Fuld kontrol – du kan altid afvise eller give modbud</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Driver du et reolmarked?</h3>
+      <ul>
+        <li>Højere sell-through = mere kommission af samme kvadratmeter</li>
+        <li>Ingen ændring af kassens arbejdsgang</li>
+        <li>Bud-data: se hvilke varer og priser der skaber interesse</li>
+        <li>Gratis 4-ugers pilot med fuld deling af resultater</li>
+        <li>Kontakt os på <a href="mailto:hej@bydmig.dk" style="color:var(--clay-dark)">hej@bydmig.dk</a></li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap" style="max-width:780px">
+  <h2 class="sec">Ofte stillede spørgsmål</h2>
+
+  <details class="faq-item"><summary>Skal jeg downloade en app?</summary>
+    <div class="a">Nej. Bydmig kører direkte i din browser – scan QR-koden på skiltet ved reolerne eller gå til bydmig.dk/app. Du behøver heller ikke oprette en konto for at byde.</div></details>
+
+  <details class="faq-item"><summary>Er mit bud bindende?</summary>
+    <div class="a"><b>Ja, i 30 minutter.</b> Når dit bud accepteres, reserveres den nye pris til dig i 30 minutter. Køber du ikke varen inden da, går prisen automatisk tilbage til det normale, og varen er fri igen.</div></details>
+
+  <details class="faq-item"><summary>Hvor lavt må jeg byde?</summary>
+    <div class="a">Minimum 50 % af varens pris. Det holder buddene seriøse – og gør standlejerne trygge ved at være med.</div></details>
+
+  <details class="faq-item"><summary>Hvad er bundle-rabat?</summary>
+    <div class="a">Nogle standlejere giver rabat, hvis du køber flere af deres varer – fx 3 ting eller flere = 15 %. Du ser rabatten allerede, når du scanner en vare fra standen, og den fordeles automatisk ud på hver vares pris. Du byder ikke på bundlen; rabatten er sat af ejeren og gælder oven i din pris.</div></details>
+
+  <details class="faq-item"><summary>Hvor hurtigt får jeg svar på mit bud?</summary>
+    <div class="a">Mange standlejere har slået auto-accept til, så svaret kommer med det samme. Ellers får standlejeren besked og svarer typisk inden for få minutter. Du kan roligt shoppe videre imens.</div></details>
+
+  <details class="faq-item"><summary>Hvordan betaler jeg?</summary>
+    <div class="a">Ved kassen, præcis som normalt. Bydmig håndterer ingen betalinger – vi ændrer kun prisen. Vis din kassekode ved betaling, så slår varen den nye pris.</div></details>
+
+  <details class="faq-item"><summary>Jeg er standlejer – mister jeg kontrollen over mine priser?</summary>
+    <div class="a">Nej. Intet ændres uden dit ja: enten accepterer du hvert bud manuelt, eller også har du selv sat en minimumsgrænse for auto-accept. Alle prisændringer logges, og du kan altid se historikken.</div></details>
+
+  <details class="faq-item"><summary>Hvilke butikker virker Bydmig i?</summary>
+    <div class="a">Bydmig ruller ud butik for butik. Kig efter "Byd mig!"-skiltene ved reolerne – de betyder, at butikken er med. Driver du selv et reolmarked, så skriv til hej@bydmig.dk.</div></details>
+
+  <details class="faq-item"><summary>Bruger Bydmig cookies?</summary>
+    <div class="a">Kun det strengt nødvendige: et login-token, der husker, hvem du er, mens du bruger tjenesten. Ingen sporing, ingen annoncer, ingen tredjeparts-markedsføring – og derfor heller ingen cookie-boks, der skal klikkes væk. Læs mere i vores <a href="/privatliv">privatlivspolitik</a>.</div></details>
+</div></section>
+
+<footer><div class="wrap">
+  <div>
+    <div class="logo">Bydmig<b>.</b></div>
+    <p style="margin-top:10px;max-width:36ch">Scan. Byd. Køb.<br>[Bydmig ApS · CVR XXXXXXXX<br>Adresse] · hej@bydmig.dk</p>
+  </div>
+  <div class="flinks">
+    <a href="/privatliv">Privatlivspolitik</a>
+    <a href="/vilkaar">Vilkår for brug</a>
+    <a href="mailto:support@bydmig.dk">Support</a>
+  </div>
+</div></footer>
+
+</body>
+</html>
