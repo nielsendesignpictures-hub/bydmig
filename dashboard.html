@@ -170,14 +170,17 @@ async function loadAll(){
   $('periodLabel').textContent = days === 9999 ? 'Hele perioden' : 'Sidste '+days+' dage';
 
   const [bidsQ, itemsQ, sellersQ, storesQ] = await Promise.all([
-    sb.from('bids').select('*, items(name, list_price, store_id)').gte('created_at', since).order('created_at',{ascending:false}),
+    sb.from('bids').select('*, cancelled_after_accept, items(name, list_price, store_id)').gte('created_at', since).order('created_at',{ascending:false}),
     sb.from('items').select('id, store_id, status'),
     sb.from('sellers').select('id, store_id'),
     sb.from('stores').select('id, name')
   ]);
   const bids = bidsQ.data||[], items = itemsQ.data||[], sellers = sellersQ.data||[], stores = storesQ.data||[];
 
-  const done = bids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status));
+  // "Gennemført handel" = accepteret og IKKE aktivt markeret som ikke-solgt.
+  // Formodet solgt som standard – kun undtagelsen (annulleret) trækkes fra.
+  const done = bids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status) && !b.cancelled_after_accept);
+  const cancelled = bids.filter(b=>b.cancelled_after_accept);
   const buyers = new Set(bids.map(b=>b.buyer_id)).size;
   const value = done.reduce((s,b)=>s+Number(b.status==='counter_accepted'?b.counter_amount:b.amount),0);
   const listVal = done.reduce((s,b)=>s+Number(b.items?.list_price||0),0);
@@ -192,7 +195,8 @@ async function loadAll(){
     [discPct+' %', 'Gns. rabat'],
     [buyers, 'Unikke købere'],
     [sellers.length, 'Standlejere'],
-    [items.filter(i=>i.status==='active').length, 'Aktive varer']
+    [items.filter(i=>i.status==='active').length, 'Aktive varer'],
+    [cancelled.length, 'Markeret ikke-solgt']
   ].map(k=>'<div class="kpi"><div class="v '+(k[2]||'')+'">'+k[0]+'</div><div class="l">'+k[1]+'</div></div>').join('');
 
   // Chart: bud pr. dag
@@ -217,7 +221,7 @@ async function loadAll(){
   // Pr. butik
   const rows = stores.map(st=>{
     const sBids = bids.filter(b=>b.items?.store_id===st.id);
-    const sDone = sBids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status));
+    const sDone = sBids.filter(b=>['accepted','counter_accepted','completed'].includes(b.status) && !b.cancelled_after_accept);
     const sVal = sDone.reduce((s,b)=>s+Number(b.status==='counter_accepted'?b.counter_amount:b.amount),0);
     const sList = sDone.reduce((s,b)=>s+Number(b.items?.list_price||0),0);
     return '<tr><td><b>'+st.name+'</b></td>'+
@@ -235,9 +239,10 @@ async function loadAll(){
   const storeName = id => (stores.find(s=>s.id===id)||{}).name||'';
   $('dealsTable').querySelector('tbody').innerHTML = bids.slice(0,25).map(b=>{
     const fin = b.status==='counter_accepted'?b.counter_amount:b.amount;
-    const isDone = ['accepted','counter_accepted','completed'].includes(b.status);
-    const st = { pending:['wait','Afventer'], accepted:['ok','Accepteret'], counter_accepted:['ok','Accepteret'],
-      completed:['ok','Købt'], declined:['no','Afvist'], countered:['wait','Modbud'], expired:['no','Udløbet'] }[b.status]||['wait',b.status];
+    const isDone = ['accepted','counter_accepted','completed'].includes(b.status) && !b.cancelled_after_accept;
+    const st = b.cancelled_after_accept ? ['no','Ikke solgt'] :
+      { pending:['wait','Afventer'], accepted:['ok','Solgt'], counter_accepted:['ok','Solgt'],
+      completed:['ok','Solgt'], declined:['no','Afvist'], countered:['wait','Modbud'], expired:['no','Udløbet'] }[b.status]||['wait',b.status];
     return '<tr><td class="mono">'+new Date(b.created_at).toLocaleString('da-DK',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</td>'+
       '<td>'+(b.items?.name||'–')+'</td><td>'+storeName(b.items?.store_id)+'</td>'+
       '<td class="num">'+kr(b.items?.list_price||0)+'</td>'+
