@@ -213,6 +213,10 @@
       <h2>Indkomne bud</h2>
       <div id="sellerBids"><div class="empty">Ingen bud lige nu.</div></div>
 
+      <h2>Seneste salg</h2>
+      <p class="muted" style="margin-top:-8px;margin-bottom:10px">Accepterede bud tæller automatisk som solgt. Tryk kun, hvis en handel <b>ikke</b> blev gennemført.</p>
+      <div id="sellerSales"><div class="empty">Ingen salg endnu.</div></div>
+
       <h2>Dine varer</h2>
       <div class="card">
         <label>Varenummer</label>
@@ -533,7 +537,7 @@ const Seller = {
     $('bMin').value = p.bundle_min_items || '';
     $('bPct').value = p.bundle_discount_pct || '';
     App.show('v-seller-home');
-    Seller.loadItems(); Seller.loadBids(); Seller.subscribe();
+    Seller.loadItems(); Seller.loadBids(); Seller.loadSales(); Seller.subscribe();
   },
 
   async saveSettings(){
@@ -598,6 +602,46 @@ const Seller = {
     if(error){ toast('Fejl: '+error.message); return; }
     toast(status==='accepted'?'Bud accepteret – prisen er logget.':status==='countered'?'Modbud sendt.':'Bud afvist.');
     Seller.loadBids();
+    Seller.loadSales();
+  },
+
+  async loadSales(){
+    // Viser de seneste accepterede handler (formodet solgt som standard).
+    // Kun annullerede handler er trukket fra – ingen aktiv bekræftelse krævet.
+    const { data } = await sb.from('bids')
+      .select('*, items!inner(name, item_no, list_price, seller_id)')
+      .eq('items.seller_id', Seller.profile.id)
+      .in('status', ['accepted','counter_accepted'])
+      .order('updated_at', {ascending:false}).limit(15);
+    if(!data?.length){ $('sellerSales').innerHTML = '<div class="empty">Ingen salg endnu.</div>'; return; }
+    $('sellerSales').innerHTML = data.map(b=>{
+      const price = b.status==='counter_accepted' ? b.counter_amount : b.amount;
+      const when = new Date(b.updated_at||b.created_at).toLocaleString('da-DK',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      if(b.cancelled_after_accept){
+        return '<div class="card" style="opacity:.6"><div class="cr"><b>'+b.items.name+'</b>'+
+          '<span class="badge no">Ikke solgt</span></div>'+
+          '<div class="muted mono">'+kr(price)+' · '+when+'</div>'+
+          '<button class="btn btn-ghost" style="margin-top:8px;padding:8px" onclick="Seller.uncancelSale(\''+b.id+'\')">Fortryd – det blev alligevel solgt</button></div>';
+      }
+      return '<div class="card"><div class="cr"><b>'+b.items.name+'</b>'+
+        '<span class="badge ok">Solgt</span></div>'+
+        '<div class="muted mono">'+kr(price)+' · '+when+'</div>'+
+        '<button class="btn btn-ghost" style="margin-top:8px;padding:8px;color:var(--red);border-color:var(--red)" onclick="Seller.cancelSale(\''+b.id+'\')">Blev ikke solgt</button></div>';
+    }).join('');
+  },
+
+  async cancelSale(bidId){
+    const { error } = await sb.rpc('cancel_sale', { p_bid_id: bidId, p_reason: null });
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast('Markeret som ikke solgt.');
+    Seller.loadSales();
+  },
+
+  async uncancelSale(bidId){
+    const { error } = await sb.rpc('uncancel_sale', { p_bid_id: bidId });
+    if(error){ toast('Fejl: '+error.message); return; }
+    toast('Fortrudt – tæller igen som solgt.');
+    Seller.loadSales();
   },
 
   subscribe(){
