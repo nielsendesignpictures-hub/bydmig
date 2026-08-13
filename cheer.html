@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CheerMeUp — Alt til cheerleadere & gymnaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#160F2B;
+    --base:#FBF6EF;
+    --card:#FFFFFF;
+    --pink:#FF3B6B;
+    --pink-deep:#E01A50;
+    --gold:#FFC72C;
+    --violet:#6C4EF5;
+    --line: rgba(22,15,43,0.10);
+    --radius: 18px;
+    --maxw: 1280px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--base);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+    line-height:0.95;
+    margin:0;
+  }
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ---------- Marquee ---------- */
+  .marquee{
+    background:var(--ink); color:var(--base);
+    overflow:hidden; white-space:nowrap; padding:9px 0;
+    font-size:12.5px; font-weight:700; letter-spacing:0.14em;
+  }
+  .marquee span{
+    display:inline-block; padding-right:48px;
+    animation: scroll 26s linear infinite;
+  }
+  @keyframes scroll{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  .marquee-track{display:flex; width:200%;}
+  .marquee-track span::before{content:"★  "; color:var(--gold);}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--base);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 0;
+  }
+  .logo{
+    font-family:'Anton', sans-serif; font-size:26px; letter-spacing:0.01em;
+    display:flex; align-items:baseline; gap:4px;
+  }
+  .logo .dot{color:var(--pink);}
+  .nav-actions{display:flex; align-items:center; gap:18px;}
+  .search-pill{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--line);
+    border-radius:999px; padding:10px 16px; width:280px;
+    font-size:14px; color:#8a8296;
+  }
+  .icon-btn{
+    width:40px; height:40px; border-radius:999px; border:1px solid var(--line);
+    background:var(--card); display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .icon-btn .badge{
+    position:absolute; top:-4px; right:-4px; background:var(--pink); color:white;
+    font-size:10px; font-weight:800; width:17px; height:17px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  nav.mega{
+    display:flex; gap:2px; padding:2px 0 14px; flex-wrap:wrap;
+  }
+  nav.mega a.top-cat{
+    padding:8px 14px; border-radius:999px; font-weight:700; font-size:13.5px;
+    text-transform:uppercase; letter-spacing:0.03em;
+  }
+  nav.mega a.top-cat:hover{background:var(--card); box-shadow:0 1px 0 var(--line) inset;}
+  nav.mega a.sale{color:var(--pink-deep);}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    background: linear-gradient(180deg, #1B1030 0%, #2B1550 100%);
+    color:var(--base);
+    overflow:hidden;
+    border-radius:0 0 40px 40px;
+  }
+  .hero .wrap{
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:40px;
+    align-items:center; padding:70px 28px 60px;
+    position:relative; z-index:2;
+  }
+  .hero-eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+    padding:7px 14px; border-radius:999px; font-size:12.5px; font-weight:700;
+    letter-spacing:0.08em; text-transform:uppercase; margin-bottom:22px;
+  }
+  .hero-eyebrow .flag{color:var(--gold);}
+  .hero h1{
+    font-size:clamp(44px, 6vw, 76px);
+    color:var(--base);
+  }
+  .hero h1 em{
+    font-style:normal; color:var(--pink);
+    -webkit-text-stroke:0px;
+  }
+  .hero p.lede{
+    margin-top:22px; font-size:17px; line-height:1.6; color:rgba(251,246,239,0.78);
+    max-width:460px;
+  }
+  .hero-ctas{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:15px 26px; border-radius:999px; font-weight:800; font-size:14.5px;
+    letter-spacing:0.02em; border:none; text-transform:uppercase;
+  }
+  .btn-primary{background:var(--pink); color:white; box-shadow:0 10px 24px -8px rgba(255,59,107,0.55);}
+  .btn-primary:hover{background:var(--pink-deep);}
+  .btn-ghost{background:transparent; color:var(--base); border:1.5px solid rgba(251,246,239,0.4);}
+  .btn-ghost:hover{border-color:var(--base);}
+  .btn-dark{background:var(--ink); color:var(--base);}
+  .btn-dark:hover{background:#000;}
+
+  .hero-stats{display:flex; gap:30px; margin-top:44px;}
+  .hero-stats div b{display:block; font-family:'Anton'; font-size:26px; color:var(--gold);}
+  .hero-stats div span{font-size:12px; color:rgba(251,246,239,0.65); text-transform:uppercase; letter-spacing:0.05em;}
+
+  .hero-visual{
+    position:relative; aspect-ratio:1/1; border-radius:28px; overflow:hidden;
+    background: radial-gradient(120% 120% at 30% 20%, #FF6A93 0%, #FF3B6B 45%, #B41C4E 100%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .bow-svg{width:62%; filter:drop-shadow(0 22px 30px rgba(0,0,0,0.35));}
+  .float-chip{
+    position:absolute; background:var(--card); color:var(--ink);
+    border-radius:16px; padding:12px 16px; font-size:13px; font-weight:700;
+    box-shadow:0 14px 30px -12px rgba(0,0,0,0.35);
+    display:flex; align-items:center; gap:10px;
+  }
+  .float-chip.a{top:8%; left:6%;}
+  .float-chip.b{bottom:9%; right:6%;}
+  .float-chip .swatch{width:10px; height:10px; border-radius:50%; background:var(--gold);}
+
+  /* ---------- Trust bar ---------- */
+  .trust{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:0; margin-top:0;
+  }
+  .trust .wrap{display:grid; grid-template-columns:repeat(4,1fr); padding:26px 28px;}
+  .trust-item{
+    display:flex; align-items:center; gap:12px; font-size:13.5px; font-weight:700;
+    border-right:1px solid var(--line); padding-right:14px;
+  }
+  .trust-item:last-child{border-right:none;}
+  .trust-item .ic{
+    width:34px; height:34px; border-radius:10px; background:var(--base);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    border:1px solid var(--line);
+  }
+
+  /* ---------- Section headers ---------- */
+  .sec{padding:76px 0;}
+  .sec-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:38px; gap:20px; flex-wrap:wrap;
+  }
+  .sec-head .tag{
+    font-size:12px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--pink-deep); margin-bottom:10px; display:block;
+  }
+  .sec-head h2{font-size:clamp(30px,4vw,46px);}
+  .sec-head p{color:#6b6478; max-width:440px; font-size:15px; line-height:1.55;}
+  .see-all{
+    font-weight:800; font-size:13.5px; text-transform:uppercase; letter-spacing:0.03em;
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+    border-bottom:2px solid var(--ink); padding-bottom:3px;
+  }
+
+  /* ---------- Category grid (curated, not all 151) ---------- */
+  .cat-grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:18px;
+  }
+  .cat-card{
+    position:relative; border-radius:var(--radius); overflow:hidden;
+    aspect-ratio:4/5; display:flex; flex-direction:column; justify-content:flex-end;
+    padding:20px; color:white; isolation:isolate;
+  }
+  .cat-card::after{
+    content:""; position:absolute; inset:0; z-index:-1;
+    background:linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 100%);
+  }
+  .cat-card .glyph{
+    position:absolute; top:16px; left:16px; font-size:26px; z-index:2;
+  }
+  .cat-card h3{font-size:21px; z-index:2;}
+  .cat-card .count{font-size:12px; opacity:0.85; margin-top:4px; font-weight:600; z-index:2;}
+  .cat-card.c1{background:linear-gradient(160deg,#FF6A93,#E01A50);}
+  .cat-card.c2{background:linear-gradient(160deg,#6C4EF5,#3B26A8);}
+  .cat-card.c3{background:linear-gradient(160deg,#FFC72C,#E89A00);}
+  .cat-card.c4{background:linear-gradient(160deg,#2FCBAE,#0E8E77);}
+  .cat-card.c5{background:linear-gradient(160deg,#FF8A4C,#D85A17);}
+  .cat-card.c6{background:linear-gradient(160deg,#3E8EF7,#1D53C4);}
+  .cat-card.c7{background:linear-gradient(160deg,#B95CF0,#7620C9);}
+  .cat-card.c8{background:linear-gradient(160deg,#4A4560,#211A38);}
+  .cat-card:hover{transform:translateY(-4px); transition:transform 0.25s ease;}
+
+  /* ---------- Products ---------- */
+  .prod-grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:22px;
+  }
+  .prod-card{
+    background:var(--card); border-radius:var(--radius); overflow:hidden;
+    border:1px solid var(--line); display:flex; flex-direction:column;
+  }
+  .prod-media{
+    aspect-ratio:1/1; position:relative; display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .prod-media .ribbon{
+    position:absolute; top:14px; left:-32px; background:var(--ink); color:white;
+    font-size:10.5px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+    padding:5px 40px; transform:rotate(-38deg); z-index:3;
+  }
+  .prod-media .ribbon.sale{background:var(--pink);}
+  .prod-media .wish{
+    position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%;
+    background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center;
+    z-index:3; font-size:15px;
+  }
+  .prod-info{padding:16px 16px 18px;}
+  .prod-info .cat{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#a099ab; font-weight:700;}
+  .prod-info h4{font-size:15px; font-weight:700; margin-top:4px; line-height:1.3; font-family:'Plus Jakarta Sans';}
+  .prod-price{display:flex; align-items:center; gap:8px; margin-top:10px;}
+  .prod-price .now{font-weight:800; font-size:16px;}
+  .prod-price .was{font-size:13px; color:#a099ab; text-decoration:line-through;}
+  .add-cart{
+    margin-top:12px; width:100%; padding:11px; border-radius:11px; border:1.5px solid var(--ink);
+    background:transparent; font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .add-cart:hover{background:var(--ink); color:white;}
+
+  .swatch-media{width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
+
+  /* ---------- Brand strip ---------- */
+  .brands{
+    background:var(--ink); color:var(--base); padding:44px 0;
+  }
+  .brands .wrap{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;}
+  .brands .label{font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(251,246,239,0.5); font-weight:700;}
+  .brand-list{display:flex; gap:44px; flex-wrap:wrap;}
+  .brand-list span{font-family:'Anton'; font-size:22px; letter-spacing:0.02em;}
+
+  /* ---------- Story / craft ---------- */
+  .story{
+    display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;
+  }
+  .story-visual{
+    aspect-ratio:5/4; border-radius:24px;
+    background: linear-gradient(150deg,#FFD9E4,#FFF0D6);
+    position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;
+  }
+  .story-visual .badge{
+    position:absolute; bottom:20px; left:20px; background:var(--card); border-radius:16px;
+    padding:14px 18px; box-shadow:0 14px 26px -12px rgba(0,0,0,0.2); font-size:13px; font-weight:700;
+    display:flex; align-items:center; gap:10px;
+  }
+  .story h2{font-size:clamp(28px,3.6vw,42px); margin-bottom:20px;}
+  .story p{font-size:15.5px; line-height:1.7; color:#5c5468; margin-bottom:16px;}
+  .story-points{display:flex; gap:26px; margin-top:26px; flex-wrap:wrap;}
+  .story-points div{display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px;}
+  .story-points .dot2{width:9px; height:9px; border-radius:50%; background:var(--pink);}
+
+  /* ---------- Reviews / social ---------- */
+  .reviews{background:var(--card); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .review-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .review-card{
+    background:var(--base); border-radius:18px; padding:24px; border:1px solid var(--line);
+  }
+  .stars{color:var(--gold); font-size:15px; letter-spacing:2px; margin-bottom:12px;}
+  .review-card p{font-size:14.5px; line-height:1.6; color:#3f3a4d;}
+  .review-who{display:flex; align-items:center; gap:10px; margin-top:16px;}
+  .review-who .av{width:34px; height:34px; border-radius:50%; background:var(--violet); color:white;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;}
+  .review-who span{font-size:13px; font-weight:700;}
+
+  /* ---------- Newsletter ---------- */
+  .news{
+    background: linear-gradient(120deg, #FF3B6B, #FF7A59);
+    border-radius:32px; padding:56px; color:white;
+    display:grid; grid-template-columns:1.2fr 1fr; gap:30px; align-items:center;
+  }
+  .news h2{font-size:clamp(26px,3.4vw,36px);}
+  .news p{margin-top:10px; opacity:0.92; font-size:14.5px; max-width:380px;}
+  .news-form{display:flex; gap:10px;}
+  .news-form input{
+    flex:1; border:none; border-radius:999px; padding:15px 20px; font-size:14px; font-family:inherit;
+  }
+  .news-form button{
+    background:var(--ink); color:white; border:none; padding:15px 24px; border-radius:999px;
+    font-weight:800; text-transform:uppercase; font-size:13px; letter-spacing:0.03em;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{background:var(--ink); color:rgba(251,246,239,0.75); padding:64px 0 26px; margin-top:70px;}
+  .foot-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr 1fr; gap:30px;}
+  .foot-logo{font-family:'Anton'; font-size:22px; color:var(--base);}
+  footer h5{color:var(--base); font-size:12.5px; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:16px; font-family:'Plus Jakarta Sans'; font-weight:800;}
+  footer ul{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px;}
+  footer p{font-size:13.5px; line-height:1.7;}
+  .foot-bottom{
+    display:flex; justify-content:space-between; align-items:center; margin-top:50px;
+    padding-top:24px; border-top:1px solid rgba(251,246,239,0.12); font-size:12px; flex-wrap:wrap; gap:12px;
+  }
+  .pay-icons{display:flex; gap:8px;}
+  .pay-icons span{background:rgba(251,246,239,0.1); padding:5px 9px; border-radius:6px; font-size:10.5px; font-weight:700;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px){
+    .hero .wrap{grid-template-columns:1fr; padding-top:48px;}
+    .hero-visual{order:-1; max-width:340px; margin:0 auto;}
+    .trust .wrap{grid-template-columns:repeat(2,1fr); row-gap:16px;}
+    .trust-item:nth-child(odd){border-right:1px solid var(--line);}
+    .trust-item:nth-child(even){border-right:none;}
+    .cat-grid{grid-template-columns:repeat(2,1fr);}
+    .prod-grid{grid-template-columns:repeat(2,1fr);}
+    .story{grid-template-columns:1fr;}
+    .review-grid{grid-template-columns:1fr;}
+    .news{grid-template-columns:1fr; padding:36px;}
+    .foot-grid{grid-template-columns:repeat(2,1fr);}
+    .search-pill{display:none;}
+  }
+  @media (max-width:560px){
+    .cat-grid{grid-template-columns:1fr 1fr;}
+    .prod-grid{grid-template-columns:1fr 1fr;}
+    .foot-grid{grid-template-columns:1fr 1fr;}
+    nav.mega{overflow-x:auto; flex-wrap:nowrap;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .marquee-track{animation:none;}
+    .cat-card:hover{transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ANNOUNCEMENT MARQUEE — spirit-chant style -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>GRATIS FRAGT VED KØB OVER 1200 KR&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;HÅNDLAVET I JYDERUP, DANMARK&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;HURTIG LEVERING 1–2 HVERDAGE&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;14 DAGES FORTRYDELSESRET&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;</span>
+    <span>GRATIS FRAGT VED KØB OVER 1200 KR&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;HÅNDLAVET I JYDERUP, DANMARK&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;HURTIG LEVERING 1–2 HVERDAGE&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;14 DAGES FORTRYDELSESRET&nbsp;&nbsp;&nbsp;★&nbsp;&nbsp;&nbsp;</span>
+  </div>
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="nav-top">
+      <a href="#" class="logo">CHEER<span class="dot">ME</span>UP</a>
+      <div class="search-pill">🔍&nbsp; Søg efter sko, bows, teamwear…</div>
+      <div class="nav-actions">
+        <div class="icon-btn" title="Konto">👤</div>
+        <div class="icon-btn" title="Ønskeliste">
+          ♡ <span class="badge">3</span>
+        </div>
+        <div class="icon-btn" title="Kurv">
+          🛍 <span class="badge">0</span>
+        </div>
+      </div>
+    </div>
+    <!-- CURATED MEGA-NAV: 151 varegrupper samlet i 8 tydelige hovedgrupper, så kunden aldrig skal lede -->
+    <nav class="mega">
+      <a class="top-cat sale" href="#">🔥 Tilbud</a>
+      <a class="top-cat" href="#kategorier">Sløjfer & Hårpynt</a>
+      <a class="top-cat" href="#kategorier">Sko & Tasker</a>
+      <a class="top-cat" href="#kategorier">Tøj & Teamwear</a>
+      <a class="top-cat" href="#kategorier">Smykker & Accessories</a>
+      <a class="top-cat" href="#kategorier">Pom Poms & Tilbehør</a>
+      <a class="top-cat" href="#kategorier">Gymnastik</a>
+      <a class="top-cat" href="#kategorier">Gaver & Klub</a>
+      <a class="top-cat" href="#">Mærker</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="hero-eyebrow"><span class="flag">🇩🇰</span> Danmarks største cheer-forhandler</div>
+      <h1>Spirit <em>fylder</em><br>hele siden.</h1>
+      <p class="lede">Nfinity & Varsity sko, håndlavede sløjfer og teamwear til hele holdet — designet og pakket med kærlighed fra Jyderup. Find det rigtige på under 10 sekunder.</p>
+      <div class="hero-ctas">
+        <a href="#kategorier" class="btn btn-primary">Shop nu →</a>
+        <a href="#bestsellers" class="btn btn-ghost">Se bestsellers</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>151+</b><span>Varegrupper</span></div>
+        <div><b>1–2 dage</b><span>Levering</span></div>
+        <div><b>100%</b><span>Eget design</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg class="bow-svg" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 80 L20 20 C5 10 5 55 25 65 L90 80 L25 95 C5 105 5 150 20 140 L100 80Z" fill="#FFFFFF" fill-opacity="0.95"/>
+        <path d="M100 80 L180 20 C195 10 195 55 175 65 L110 80 L175 95 C195 105 195 150 180 140 L100 80Z" fill="#FFF0D6"/>
+        <circle cx="100" cy="80" r="16" fill="#FFC72C"/>
+        <path d="M92 118 L86 150 L100 140 L114 150 L108 118Z" fill="#FFFFFF" fill-opacity="0.9"/>
+      </svg>
+      <div class="float-chip a"><span class="swatch"></span> Håndlavet</div>
+      <div class="float-chip b">⭐ 4.9 / 5 fra 800+ kunder</div>
+    </div>
+  </div>
+</section>
+
+<section class="trust">
+  <div class="wrap">
+    <div class="trust-item"><div class="ic">🚚</div> Gratis fragt over 1200,-</div>
+    <div class="trust-item"><div class="ic">⚡</div> Levering 1–2 hverdage</div>
+    <div class="trust-item"><div class="ic">↩︎</div> 14 dages fortrydelse</div>
+    <div class="trust-item"><div class="ic">🎀</div> Eget design & produktion</div>
+  </div>
+</section>
+
+<section class="sec" id="kategorier">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="tag">Find det hurtigt</span>
+        <h2>Shop efter kategori</h2>
+        <p>151 varegrupper samlet i 8 klare grupper — så du finder det rigtige med det samme.</p>
+      </div>
+      <a href="#" class="see-all">Se alle kategorier →</a>
+    </div>
+    <div class="cat-grid">
+      <a href="#" class="cat-card c1"><span class="glyph">🎀</span><h3>Sløjfer<br>& Hårpynt</h3><span class="count">Mini, rhinestone, cup, 3D +5 mere</span></a>
+      <a href="#" class="cat-card c2"><span class="glyph">👟</span><h3>Sko<br>& Tasker</h3><span class="count">Nfinity, Varsity, rygsække</span></a>
+      <a href="#" class="cat-card c3"><span class="glyph">👕</span><h3>Tøj<br>& Teamwear</h3><span class="count">Shorts, jerseys, spirit wear</span></a>
+      <a href="#" class="cat-card c4"><span class="glyph">💎</span><h3>Smykker<br>& Accessories</h3><span class="count">Læder, nøgleringe, stickers</span></a>
+      <a href="#" class="cat-card c5"><span class="glyph">📣</span><h3>Pom Poms<br>& Tilbehør</h3><span class="count">Megaphone, glitter, rhinestone</span></a>
+      <a href="#" class="cat-card c6"><span class="glyph">🤸</span><h3>Gymnastik</h3><span class="count">Udstyr til træning</span></a>
+      <a href="#" class="cat-card c7"><span class="glyph">🧸</span><h3>Gaver<br>& Klub</h3><span class="count">Bamser, plakater, klub ting</span></a>
+      <a href="#" class="cat-card c8"><span class="glyph">🔥</span><h3>Tilbud</h3><span class="count">Udvalgte varer, nu billigere</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="bestsellers" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="tag">Mest populære</span>
+        <h2>Bestsellers lige nu</h2>
+        <p>De varer holdene og forældrene vender tilbage efter, gang på gang.</p>
+      </div>
+      <a href="#" class="see-all">Se hele shoppen →</a>
+    </div>
+    <div class="prod-grid">
+      <div class="prod-card">
+        <div class="prod-media" style="background:linear-gradient(160deg,#FFD1DE,#FF9EB8);">
+          <div class="ribbon">Bestseller</div>
+          <div class="wish">♡</div>
+          <svg class="swatch-media" width="46%" viewBox="0 0 100 80" fill="none"><path d="M50 40 L10 10 C2 4 2 30 12 34 L45 40 L12 46 C2 50 2 76 10 70 L50 40Z" fill="#fff"/><path d="M50 40 L90 10 C98 4 98 30 88 34 L55 40 L88 46 C98 50 98 76 90 70 L50 40Z" fill="#FFE9EF"/><circle cx="50" cy="40" r="8" fill="#E01A50"/></svg>
+        </div>
+        <div class="prod-info">
+          <span class="cat">Rhinestone Bows</span>
+          <h4>Cheer Bow "Aurora" med rhinestones</h4>
+          <div class="prod-price"><span class="now">249 kr</span></div>
+          <button class="add-cart">Læg i kurv</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-media" style="background:linear-gradient(160deg,#E4E9FF,#C6D1FF);">
+          <div class="wish">♡</div>
+          <svg class="swatch-media" width="60%" viewBox="0 0 100 60" fill="none"><path d="M10 45 L20 20 Q25 10 40 10 L70 10 Q82 10 85 25 L90 45 Z" fill="#2B2540"/><rect x="8" y="43" width="86" height="10" rx="5" fill="#fff"/></svg>
+        </div>
+        <div class="prod-info">
+          <span class="cat">Nfinity Sko</span>
+          <h4>Nfinity Fearless — konkurrencesko</h4>
+          <div class="prod-price"><span class="now">899 kr</span></div>
+          <button class="add-cart">Læg i kurv</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-media" style="background:linear-gradient(160deg,#FFE9BE,#FFD37A);">
+          <div class="ribbon sale">-20%</div>
+          <div class="wish">♡</div>
+          <svg class="swatch-media" width="50%" viewBox="0 0 100 90" fill="none"><rect x="15" y="20" width="70" height="60" rx="10" fill="#7C4A2B"/><rect x="15" y="10" width="70" height="18" rx="9" fill="#5C3A22"/></svg>
+        </div>
+        <div class="prod-info">
+          <span class="cat">Tasker & Rygsække</span>
+          <h4>Varsity Team Bag — 45L</h4>
+          <div class="prod-price"><span class="now">639 kr</span><span class="was">799 kr</span></div>
+          <button class="add-cart">Læg i kurv</button>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-media" style="background:linear-gradient(160deg,#D9FCEE,#A9F2D6);">
+          <div class="wish">♡</div>
+          <svg class="swatch-media" width="45%" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" fill="#0E8E77"/><circle cx="38" cy="42" r="6" fill="#fff"/></svg>
+        </div>
+        <div class="prod-info">
+          <span class="cat">Læder Smykker</span>
+          <h4>Armbånd "Team Spirit" — læder</h4>
+          <div class="prod-price"><span class="now">129 kr</span></div>
+          <button class="add-cart">Læg i kurv</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="brands">
+  <div class="wrap">
+    <span class="label">Officiel forhandler af</span>
+    <div class="brand-list">
+      <span>NFINITY</span>
+      <span>VARSITY</span>
+      <span>CHEERMEUP</span>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="story">
+      <div class="story-visual">
+        <svg width="55%" viewBox="0 0 120 100" fill="none"><path d="M60 50 L10 15 C0 8 0 45 15 52 L55 50 L15 58 C0 65 0 100 10 90 L60 50Z" fill="#FF3B6B"/><path d="M60 50 L110 15 C120 8 120 45 105 52 L65 50 L105 58 C120 65 120 100 110 90 L60 50Z" fill="#FFC72C"/></svg>
+        <div class="badge">🧵 Syet & pakket i Jyderup</div>
+      </div>
+      <div>
+        <span class="tag" style="color:var(--pink-deep); display:block; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; font-size:12px; margin-bottom:10px;">Vores historie</span>
+        <h2>Designet af cheerleadere,<br>til cheerleadere.</h2>
+        <p>CheerMeUp startede som en drøm om bedre, mere holdbare sløjfer til danske hold. I dag designer og producerer vi størstedelen selv — og er stolt sponsor af Cheerleading Danmark og Jyderup Boldklub.</p>
+        <p>Alt sendes fra vores lager i 4450 Jyderup, ofte samme dag.</p>
+        <div class="story-points">
+          <div><span class="dot2"></span> Eget design & produktion</div>
+          <div><span class="dot2"></span> Sponsor af Cheerleading Danmark</div>
+          <div><span class="dot2"></span> Håndlavet kvalitet</div>
+        </div>
+        <a href="#" class="btn btn-dark" style="margin-top:28px;">Læs vores historie →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec reviews">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="tag">Fra rigtige kunder</span>
+        <h2>Holdene stoler på os</h2>
+      </div>
+    </div>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Bestilte bows til hele holdet — de kom hurtigt og kvaliteten er helt i top. Vi bestiller igen til næste sæson!"</p>
+        <div class="review-who"><div class="av">ML</div><span>Maria L. — holdleder</span></div>
+      </div>
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Endelig en dansk shop med rigtigt Nfinity-udvalg. Hurtig levering og super service på mail."</p>
+        <div class="review-who"><div class="av">SK</div><span>Sofie K.</span></div>
+      </div>
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Skoene passede perfekt efter deres guide, og tasken er blevet hele holdets favorit."</p>
+        <div class="review-who"><div class="av">CH</div><span>Camilla H.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="news">
+      <div>
+        <h2>Få 10% på din første ordre</h2>
+        <p>Tilmeld dig og få nyt om restocks, nye bows og eksklusive tilbud, før alle andre.</p>
+      </div>
+      <form class="news-form" onsubmit="return false;">
+        <input type="email" placeholder="Din e-mail" required>
+        <button type="submit">Tilmeld</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-logo">CHEERMEUP</div>
+        <p style="margin-top:14px; max-width:260px;">Lærkevej 13, 4450 Jyderup, Danmark<br>CVR: 46464052<br>shop@cheermeup.dk</p>
+      </div>
+      <div>
+        <h5>Shop</h5>
+        <ul>
+          <li><a href="#">Sløjfer & Hårpynt</a></li>
+          <li><a href="#">Sko & Tasker</a></li>
+          <li><a href="#">Tøj & Teamwear</a></li>
+          <li><a href="#">Tilbud</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Kundeservice</h5>
+        <ul>
+          <li><a href="#">Kontakt</a></li>
+          <li><a href="#">Fortrydelse & retur</a></li>
+          <li><a href="#">Sko guide</a></li>
+          <li><a href="#">Handelsbetingelser</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Om CheerMeUp</h5>
+        <ul>
+          <li><a href="#">Vores historie</a></li>
+          <li><a href="#">Sponsorater</a></li>
+          <li><a href="#">Team Bows</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Følg os</h5>
+        <ul>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Facebook</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 CheerMeUp — Alt til cheerleadere & gymnaster</span>
+      <div class="pay-icons">
+        <span>Dankort</span><span>Visa</span><span>Mastercard</span><span>MobilePay</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
